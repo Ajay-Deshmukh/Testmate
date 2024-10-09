@@ -6,12 +6,12 @@ import { FiClipboard, FiUsers, FiFileText, FiBarChart2, FiSettings } from 'react
 function TeacherDashboard() {
   return (
     <div className="dashboard">
-      {/* Sidebar */}
-      <div className="sidebar">
+      {/* Sidebar */} 
+      <div className="teacher-sidebar">
         <div className="sidebar-header">
           <h2>Dashboard</h2>
         </div>
-        <ul className="nav-links">
+        <ul className="nav-links">  
           <li><Link to="/create-test"><FiClipboard className="icon" /> Create Test</Link></li>
           <li><Link to="/edit-test"><FiFileText className="icon" /> Edit Test</Link></li>
           <li><Link to="/question-bank"><FiBarChart2 className="icon" /> Question Bank</Link></li>

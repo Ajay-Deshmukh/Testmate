@@ -518,7 +518,7 @@ exports.createOrder = async (req, res) => {
 
     // Create a Razorpay order
     const order = await razorpay.orders.create({
-      amount: 100, // Amount in paise (e.g., 50000 paise = ₹500)
+      amount: 100000, // Amount in paise (e.g., 50000 paise = ₹500)
       currency: 'INR',
       receipt: shortReceipt,
     });

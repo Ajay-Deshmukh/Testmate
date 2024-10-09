@@ -103,7 +103,7 @@ function StudentDashboard() {
   return (
     <div className="student-dashboard" style={{ display: 'flex', height: '100vh' }}>
       {/* Sidebar */}
-      <div className="sidebar" style={{ width: '20vw', backgroundColor: '#f4f4f4', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <div className="student-sidebar" style={{ width: '20vw', backgroundColor: '#f4f4f4', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         <div>
           <p>Branch: Computer Science</p>
           <li><a href="#noticeboard">Noticeboard</a></li>

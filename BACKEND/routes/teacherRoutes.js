@@ -1,18 +1,14 @@
 const express = require('express');
+const { addTeacher, getAllTeachers, deleteTeacher } = require('../controllers/teacherController');
 const router = express.Router();
-const {
-    getAllTeachers,
-    addTeacher,
-    removeTeacher
-} = require('../controllers/teacherController'); // Adjust the path as necessary
-
-// Get all teachers
-router.get('/teachers', getAllTeachers);
 
 // Add a new teacher
-router.post('/teachers', addTeacher);
+router.post('/addTeacher', addTeacher);
 
-// Remove a teacher
-router.delete('/teachers/:id', removeTeacher);
+// Get all teachers
+router.get('/getTeachers', getAllTeachers);
+
+// Delete a teacher by email
+router.delete('/deleteTeacher/:email', deleteTeacher);
 
 module.exports = router;
