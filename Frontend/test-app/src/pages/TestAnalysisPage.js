@@ -18,6 +18,8 @@ const TestAnalysis = () => {
       if (data.success) {
         setQuestions(data.questions);
         if (data.questions.length > 0) {
+          localStorage.setItem('test_id', data.questions[0].test_id);
+          console.log("locally stored test_id is :",localStorage.getItem('user_id'));
           fetchComments(data.questions[0].questionId);
         }
       }
@@ -112,7 +114,9 @@ const TestAnalysis = () => {
   };
 
   const handleEndAnalysis = () => {
-    navigate('/student-dashboard');
+    
+      navigate('/score');
+
   };
 
   return (
@@ -192,7 +196,7 @@ const TestAnalysis = () => {
         )}
       </div>
 
-      <div className="sidebar">
+      <div className="test-sidebar">
         {questions.map((question, index) => (
           <div
             key={index}

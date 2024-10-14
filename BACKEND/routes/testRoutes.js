@@ -5,6 +5,25 @@ const testController = require('../controllers/testController');
 const questionController = require('../controllers/questionController');
 const authMiddleware = require('../middleware/authMiddleware');
 const { updateQuestion } = require('../controllers/questionController');
+const { getLatestTestData } = require('../controllers/testController');
+
+// Route to fetch the latest test data for a specific user
+router.get('/latest-test/:userId', async (req, res) => {
+    const { userId } = req.params;
+    const result = await getLatestTestData(userId);
+  
+    if (result.error) {
+      return res.status(404).json({ message: result.error });
+    }
+  
+    res.json(result);
+  });
+
+
+
+
+// Define the route to get test attempts and scores for a specific user and test
+router.get('/test-attempts/:testId/:userId', testController.getTestAttemptsAndScores);
 
 // Route to update an existing question (add solution link and reference link)
 router.put('/UpdateQuestion', updateQuestion);

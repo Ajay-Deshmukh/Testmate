@@ -55,22 +55,23 @@ exports.getTestAnalysis = async (req, res) => {
         {
           model: Test,    
           as: 'test',
-          attributes: ['title'],
+          attributes: ['id', 'title'],
         },
       ],
     });
-    console.log("Got result from database: ",attempt);
+    
     if (!attempt) {
       return res.status(404).json({ success: false, message: 'No attempt found for this ID' });
     }
-
     // Process questions and user responses
     const formattedQuestions = attempt.responses.map((response) => {
       const question = response.question;
       const selectedOption = response.option;
-      console.log("return started");
+      console.log("test id ---------------",attempt.test.id)
+      
       return {
         testName: attempt.test.title, 
+        test_id: attempt.test.id,
         questionId: question.id,
         questionLink: question.question_link,
         options: question.options.map((option) => ({  
@@ -88,7 +89,7 @@ exports.getTestAnalysis = async (req, res) => {
         })),
       };
     });
-    console.log("formattedQuestions object ----------------------------------------",formattedQuestions);
+    
     return res.status(200).json({ success: true, questions: formattedQuestions });
   } catch (error) {
     console.error('Error fetching test analysis:', error);

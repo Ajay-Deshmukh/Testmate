@@ -21,7 +21,7 @@ const Question = sequelize.define('Question', {
     allowNull: false,
   },
   question_type: {
-    type: DataTypes.ENUM('MCQ', 'NUMERICAL','MSQ'),
+    type: DataTypes.ENUM('MCQ', 'NUMERICAL', 'MSQ'),
     allowNull: false,
   },
   marks: {
@@ -37,11 +37,20 @@ const Question = sequelize.define('Question', {
     type: DataTypes.STRING, // URL for the reference link
     allowNull: true,
   },
-  createdAt: { type: DataTypes.DATE, field: 'created_at', defaultValue: DataTypes.NOW },
+  subject: {
+    type: DataTypes.STRING, // New subject column
+    allowNull: false,
+  },
+  createdAt: { 
+    type: DataTypes.DATE, 
+    field: 'created_at', 
+    defaultValue: DataTypes.NOW 
+  },
 }, {
   timestamps: true,
   updatedAt: false,
 });
+
 console.log('Question model defined:', Question === sequelize.models.Question);
 
 module.exports = Question;

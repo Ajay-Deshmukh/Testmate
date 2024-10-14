@@ -75,20 +75,28 @@ const sendWelcomeEmail = async (userEmail, userName) => {
   }
 };
 
-// User login
 exports.login = async (req, res) => {
   try {
-
-    console.log("login handler hited")
-    const { email, password } = req.body;
-    if (!email || !password) {
+    console.log("login handler hit");
+    const { input, password } = req.body; // Changed 'email' to 'input'
+    if (!input || !password) {
       return res.status(400).json({
         success: false,
         message: 'Please fill all the details carefully', 
       });
     }
 
-    let user = await User.findOne({ where: { email } });
+    // Determine whether the input is an email or username
+    const isEmail = input.includes('@');
+    
+    // Find user by email or username
+    let user;
+    if (isEmail) {
+      user = await User.findOne({ where: { email: input } });
+    } else {
+      user = await User.findOne({ where: { username: input } });
+    }
+
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -108,7 +116,6 @@ exports.login = async (req, res) => {
         expiresIn: '2h',
       });
 
-      
       user.token = token;
       user.password = undefined;
 
@@ -117,11 +124,11 @@ exports.login = async (req, res) => {
         httpOnly: true, 
       };
 
-      // Set the token and branch cookies 
+      // Set the token and branch cookies
       res.cookie('token', token, options);
       res.cookie('branch', user.branch, { httpOnly: true, ...options });
 
-      console.log("COOKIE SENT SUCESSFULLY");
+      console.log("COOKIE SENT SUCCESSFULLY");
 
       return res.status(200).json({
         success: true,
@@ -129,8 +136,6 @@ exports.login = async (req, res) => {
         user,
         message: 'User logged in successfully',
       });
-
-
     } else {
       return res.status(403).json({
         success: false,
@@ -145,7 +150,6 @@ exports.login = async (req, res) => {
     });
   }
 };
-
 // Delete a user by email
 exports.deleteUser = async (req, res) => {
   try {

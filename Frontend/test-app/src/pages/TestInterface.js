@@ -14,6 +14,7 @@ const TestInterface = () => {
   const [timer, setTimer] = useState(0);
 
   useEffect(() => {
+    localStorage.setItem('test_id', testId);
     const storedUserId = localStorage.getItem('user_id');
     setUserId(storedUserId);
 

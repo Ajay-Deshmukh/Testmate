@@ -18,6 +18,7 @@ import Layout from './components/Layout';
 import AdminDashboard from './pages/AdminDashboard'; // Import your AdminP
 import PrivateRoute from './components/PrivateRoute';
 import PaymentInfo from './pages/PaymentInfo';
+import Score from './pages/Score';
 
 function App() {
   // Function to check if the user is logged in
@@ -36,6 +37,7 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/score" element={<Score />} />
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />
           <Route path="/contact" element={<Contact />} />

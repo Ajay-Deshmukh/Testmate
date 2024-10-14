@@ -18,6 +18,168 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+exports.getLatestTestData = async (userId) => {
+  try {
+    // Find the latest completed test attempt for the user
+    const latestCompletedTestAttempt = await TestAttempt.findOne({
+      where: { user_id: userId, completed_at: { [Op.ne]: null } },
+      order: [['completed_at', 'DESC']],
+    });
+
+    console.log('Latest Completed Attempt:', latestCompletedTestAttempt);
+
+    if (!latestCompletedTestAttempt) {
+      return { error: 'No completed test attempts found for this user' };
+    }
+
+    const testId = latestCompletedTestAttempt.test_id;
+
+    // Get all questions associated with the test
+    const questions = await Question.findAll({
+      where: { test_id: testId },
+    });
+
+    console.log(`Fetched ${questions.length} questions for test ID: ${testId}`);
+
+    // Initialize data structures for storing subject scores
+    const subjectData = {};
+
+    for (const question of questions) {
+      const { id: questionId, subject, marks } = question;
+
+      // Find the user's response to the current question
+      const response = await Response.findOne({
+        where: { attempt_id: latestCompletedTestAttempt.id, question_id: questionId },
+      });
+
+      console.log(`Question ID: ${questionId}, Response: ${response ? 'Found' : 'Not Found'}`);
+
+      // Initialize subject data if not already present
+      if (!subjectData[subject]) {
+        subjectData[subject] = {
+          totalQuestions: 0,
+          correctQuestions: 0,
+          incorrectQuestions: 0, // New field for incorrect questions
+          score: 0,
+          notAttempted: 0, // Field for not attempted questions
+        };
+      }
+
+      // Update the subject data
+      subjectData[subject].totalQuestions += 1;
+
+      // Determine the status of the user's response
+      if (response) {
+        // There is a response, determine if it's correct or incorrect
+        let isCorrect = false;
+        if (question.question_type === 'MCQ' || question.question_type === 'MSQ') {
+          const selectedOption = await Option.findByPk(response.option_id);
+          isCorrect = selectedOption && selectedOption.is_correct;
+        } else if (question.question_type === 'NUMERICAL') {
+          const correctAnswer = await Option.findOne({
+            where: { question_id: questionId, is_correct: true },
+          });
+          isCorrect = correctAnswer && parseFloat(response.numerical_response) === parseFloat(correctAnswer.option_text);
+        }
+
+        if (isCorrect) {
+          subjectData[subject].correctQuestions += 1;
+          subjectData[subject].score += marks;
+        } else {
+          subjectData[subject].incorrectQuestions += 1; // Increment for incorrect answers
+        }
+      } else {
+        // If there is no response, count as not attempted
+        subjectData[subject].notAttempted += 1;
+      }
+    }
+
+    // Prepare data for the frontend
+    const categories = Object.keys(subjectData);
+    const scores = categories.map((subject) => subjectData[subject].score);
+    const correctQuestions = categories.map((subject) => subjectData[subject].correctQuestions);
+    const totalQuestions = categories.map((subject) => subjectData[subject].totalQuestions);
+    const notAttemptedQuestions = categories.map((subject) => subjectData[subject].notAttempted); // Collect not attempted data
+    const incorrectQuestions = categories.map((subject) => subjectData[subject].incorrectQuestions); // Collect incorrect data
+
+    // Debugging output
+    console.log('Categories:', categories);
+    console.log('Scores:', scores);
+    console.log('Correct Questions:', correctQuestions);
+    console.log('Total Questions:', totalQuestions);
+    console.log('Not Attempted Questions:', notAttemptedQuestions);
+    console.log('Incorrect Questions:', incorrectQuestions); // Log incorrect questions
+
+    return { 
+      categories, 
+      scores, 
+      correctQuestions, 
+      totalQuestions, 
+      notAttemptedQuestions,
+      incorrectQuestions // Return incorrect questions
+    };
+  } catch (error) {
+    console.error('Error retrieving latest test data:', error);
+    return { error: 'Error retrieving latest test data' };
+  }
+};
+
+
+
+
+
+// Controller function to get test attempts and scores for a specific user and test
+exports.getTestAttemptsAndScores = async (req, res) => {
+  const { testId, userId } = req.params;
+  console.log("getTestAttemptsAndScores hit");
+  try {
+    // Step 1: Fetch all TestAttempt entries for the given testId and userId
+    const attempts = await TestAttempt.findAll({
+      where: {
+        test_id: testId,
+        user_id: userId,
+      },
+      attributes: ['id', 'started_at', 'completed_at', 'duration'], // Optionally fetch attempt details
+    });
+
+    if (!attempts || attempts.length === 0) { 
+      return res.status(404).json({ message: 'No test attempts found for this user and test.' });   
+    }
+
+    // Step 2: Get all attempt IDs to fetch corresponding results
+    const attemptIds = attempts.map(attempt => attempt.id);
+
+    // Step 3: Fetch the scores of all the attempts using the Result model
+    const results = await Result.findAll({
+      where: {
+        attempt_id: attemptIds,
+      },
+      attributes: ['attempt_id', 'score'],
+    });
+
+    // Step 4: Structure the data to feed into Chart.js
+    const data = {
+      // Labels will be based on the started_at time
+      labels: attempts.map(attempt => {
+        // Format the started_at date
+        const date = new Date(attempt.started_at);
+        return date.toLocaleString(); // Format to a readable string, you can customize this
+      }),
+      scores: results.map(result => result.score), // Scores of each attempt
+    };
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching test attempts and scores:', error);
+    res.status(500).json({ error: 'An error occurred while fetching data.' });
+  }
+};
+
+
+
+
+
+
 // Create a new test
 exports.createTest = async (req, res) => {
   console.log("Got request to create test with request body", req.body);
@@ -191,7 +353,7 @@ exports.getTests = async (req, res) => {
 
 exports.verifyPayment = async (req, res) => {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature, user_id, tet} = req.body;
-  console.log("verifyPayment------------------------details: ",req.body)
+  
   const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
   hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
   const generated_signature = hmac.digest('hex');
@@ -213,7 +375,7 @@ exports.verifyPayment = async (req, res) => {
 
 
 exports.startTest = async (req, res) => {
-  console.log('Request body for starting test:', req.body);
+  
   const { user_id, test_id } = req.body;
 
   try { 
@@ -238,7 +400,7 @@ exports.startTest = async (req, res) => {
         test_id,
         started_at: new Date(),
       });
-      console.log("Current test attempt ID is", testAttempt.id);
+      
 
       // Get all questions for the test
       const questions = await Question.findAll({
@@ -510,7 +672,7 @@ exports.deleteUserAccount = async (req, res) => {
 
 
 exports.createOrder = async (req, res) => {
-  console.log('Request body for creating order:', req.body);
+  
   const { user_id, test_id } = req.body;
 
   try {
@@ -539,3 +701,5 @@ exports.createOrder = async (req, res) => {
     });
   }
 };
+
+

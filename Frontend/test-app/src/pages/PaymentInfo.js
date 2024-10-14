@@ -92,7 +92,7 @@ const PaymentInfo = () => {
       <p>
         Unlock full access to our GATE platform with a one-time payment. By completing this payment, you'll gain access to all the tests, previous year questions, and other valuable resources available on our platform. This is a lifetime subscription with no recurring charges!
       </p>
-      <p><strong>Payment Amount:</strong> ₹{paymentAmount / 100}</p>
+      <p><strong>Payment Amount:</strong> ₹1000 </p>  
       <button onClick={handleBuyNow} className="buy-now-button">Buy Now</button>
     </div>
   );
